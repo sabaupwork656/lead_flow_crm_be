@@ -1,0 +1,264 @@
+  [1m[35m (198.4ms)[0m  [1m[35mCREATE DATABASE "backend_test" ENCODING = 'unicode'[0m
+  [1m[35m (16.4ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY)[0m
+  [1m[35m (8.4ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (0.2ms)[0m  [1m[34mSELECT pg_try_advisory_lock(3087697479046693695)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.6ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.9ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (1.6ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'test', '2026-05-02 12:30:07.107769', '2026-05-02 12:30:07.107773') RETURNING "key"[0m
+Migrating to CreateWorkspaces (20260502121453)
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (10.7ms)[0m  [1m[35mCREATE TABLE "workspaces" ("id" bigserial primary key, "name" character varying NOT NULL, "business_type" character varying, "plan" character varying DEFAULT 'Growth' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.5ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260502121453') RETURNING "version"[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateUsers (20260502121454)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (10.4ms)[0m  [1m[35mCREATE TABLE "users" ("id" bigserial primary key, "workspace_id" bigint NOT NULL, "name" character varying NOT NULL, "email" character varying NOT NULL, "password_digest" character varying NOT NULL, "role" character varying DEFAULT 'staff' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_73214f707d"
+FOREIGN KEY ("workspace_id")
+  REFERENCES "workspaces" ("id")
+)[0m
+  [1m[35m (3.2ms)[0m  [1m[35mCREATE INDEX "index_users_on_workspace_id" ON "users" ("workspace_id")[0m
+  [1m[35m (3.4ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.3ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260502121454') RETURNING "version"[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateLeads (20260502121502)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (11.1ms)[0m  [1m[35mCREATE TABLE "leads" ("id" bigserial primary key, "workspace_id" bigint NOT NULL, "assigned_to_id" bigint, "name" character varying NOT NULL, "email" character varying, "phone" character varying, "company_name" character varying, "source" character varying, "status" character varying DEFAULT 'New' NOT NULL, "estimated_value" decimal(12,2) DEFAULT 0.0, "priority" character varying DEFAULT 'Medium' NOT NULL, "next_follow_up_at" timestamp(6), "notes_summary" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_08a9cd0b0b"
+FOREIGN KEY ("workspace_id")
+  REFERENCES "workspaces" ("id")
+, CONSTRAINT "fk_rails_e68b669097"
+FOREIGN KEY ("assigned_to_id")
+  REFERENCES "users" ("id")
+)[0m
+  [1m[35m (3.1ms)[0m  [1m[35mCREATE INDEX "index_leads_on_workspace_id" ON "leads" ("workspace_id")[0m
+  [1m[35m (3.2ms)[0m  [1m[35mCREATE INDEX "index_leads_on_assigned_to_id" ON "leads" ("assigned_to_id")[0m
+  [1m[35m (3.2ms)[0m  [1m[35mCREATE INDEX "index_leads_on_workspace_id_and_status" ON "leads" ("workspace_id", "status")[0m
+  [1m[35m (3.5ms)[0m  [1m[35mCREATE INDEX "index_leads_on_workspace_id_and_next_follow_up_at" ON "leads" ("workspace_id", "next_follow_up_at")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.3ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260502121502') RETURNING "version"[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateNotes (20260502121503)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (10.3ms)[0m  [1m[35mCREATE TABLE "notes" ("id" bigserial primary key, "lead_id" bigint NOT NULL, "user_id" bigint NOT NULL, "body" text NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_c82accd29c"
+FOREIGN KEY ("lead_id")
+  REFERENCES "leads" ("id")
+, CONSTRAINT "fk_rails_7f2323ad43"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+)[0m
+  [1m[35m (3.1ms)[0m  [1m[35mCREATE INDEX "index_notes_on_lead_id" ON "notes" ("lead_id")[0m
+  [1m[35m (3.0ms)[0m  [1m[35mCREATE INDEX "index_notes_on_user_id" ON "notes" ("user_id")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.3ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260502121503') RETURNING "version"[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateActivityLogs (20260502121504)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (10.5ms)[0m  [1m[35mCREATE TABLE "activity_logs" ("id" bigserial primary key, "workspace_id" bigint NOT NULL, "lead_id" bigint, "user_id" bigint NOT NULL, "action" character varying NOT NULL, "metadata" jsonb DEFAULT '{}' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_5d31817ab8"
+FOREIGN KEY ("workspace_id")
+  REFERENCES "workspaces" ("id")
+, CONSTRAINT "fk_rails_0906a71c07"
+FOREIGN KEY ("lead_id")
+  REFERENCES "leads" ("id")
+, CONSTRAINT "fk_rails_c9badf82db"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+)[0m
+  [1m[35m (3.5ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_workspace_id" ON "activity_logs" ("workspace_id")[0m
+  [1m[35m (10.1ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_lead_id" ON "activity_logs" ("lead_id")[0m
+  [1m[35m (5.1ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_user_id" ON "activity_logs" ("user_id")[0m
+  [1m[35m (3.3ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_workspace_id_and_created_at" ON "activity_logs" ("workspace_id", "created_at")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.7ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260502121504') RETURNING "version"[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT[0m
+  [1m[35m (1.9ms)[0m  [1m[34mSELECT pg_advisory_unlock(3087697479046693695)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (2.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.2ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.8ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.6ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[35m (32.4ms)[0m  [1m[35mDROP DATABASE IF EXISTS "backend_test"[0m
+  [1m[35m (129.3ms)[0m  [1m[35mCREATE DATABASE "backend_test" ENCODING = 'unicode'[0m
+  [1m[35mSQL (1.2ms)[0m  [1m[35mCREATE EXTENSION IF NOT EXISTS "plpgsql"[0m
+  [1m[35m (0.3ms)[0m  [1m[35mDROP TABLE IF EXISTS "activity_logs" CASCADE[0m
+  [1m[35m (15.0ms)[0m  [1m[35mCREATE TABLE "activity_logs" ("id" bigserial primary key, "workspace_id" bigint NOT NULL, "lead_id" bigint, "user_id" bigint NOT NULL, "action" character varying NOT NULL, "metadata" jsonb DEFAULT '{}' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (5.5ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_lead_id" ON "activity_logs" ("lead_id")[0m
+  [1m[35m (5.1ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_user_id" ON "activity_logs" ("user_id")[0m
+  [1m[35m (6.4ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_workspace_id_and_created_at" ON "activity_logs" ("workspace_id", "created_at")[0m
+  [1m[35m (6.0ms)[0m  [1m[35mCREATE INDEX "index_activity_logs_on_workspace_id" ON "activity_logs" ("workspace_id")[0m
+  [1m[35m (0.4ms)[0m  [1m[35mDROP TABLE IF EXISTS "leads" CASCADE[0m
+  [1m[35m (14.3ms)[0m  [1m[35mCREATE TABLE "leads" ("id" bigserial primary key, "workspace_id" bigint NOT NULL, "assigned_to_id" bigint, "name" character varying NOT NULL, "email" character varying, "phone" character varying, "company_name" character varying, "source" character varying, "status" character varying DEFAULT 'New' NOT NULL, "estimated_value" decimal(12,2) DEFAULT 0.0, "priority" character varying DEFAULT 'Medium' NOT NULL, "next_follow_up_at" timestamp(6), "notes_summary" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (5.5ms)[0m  [1m[35mCREATE INDEX "index_leads_on_assigned_to_id" ON "leads" ("assigned_to_id")[0m
+  [1m[35m (5.9ms)[0m  [1m[35mCREATE INDEX "index_leads_on_workspace_id_and_next_follow_up_at" ON "leads" ("workspace_id", "next_follow_up_at")[0m
+  [1m[35m (5.8ms)[0m  [1m[35mCREATE INDEX "index_leads_on_workspace_id_and_status" ON "leads" ("workspace_id", "status")[0m
+  [1m[35m (4.8ms)[0m  [1m[35mCREATE INDEX "index_leads_on_workspace_id" ON "leads" ("workspace_id")[0m
+  [1m[35m (0.3ms)[0m  [1m[35mDROP TABLE IF EXISTS "notes" CASCADE[0m
+  [1m[35m (9.8ms)[0m  [1m[35mCREATE TABLE "notes" ("id" bigserial primary key, "lead_id" bigint NOT NULL, "user_id" bigint NOT NULL, "body" text NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (4.8ms)[0m  [1m[35mCREATE INDEX "index_notes_on_lead_id" ON "notes" ("lead_id")[0m
+  [1m[35m (5.3ms)[0m  [1m[35mCREATE INDEX "index_notes_on_user_id" ON "notes" ("user_id")[0m
+  [1m[35m (0.4ms)[0m  [1m[35mDROP TABLE IF EXISTS "users" CASCADE[0m
+  [1m[35m (11.9ms)[0m  [1m[35mCREATE TABLE "users" ("id" bigserial primary key, "workspace_id" bigint NOT NULL, "name" character varying NOT NULL, "email" character varying NOT NULL, "password_digest" character varying NOT NULL, "role" character varying DEFAULT 'staff' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (5.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email")[0m
+  [1m[35m (5.0ms)[0m  [1m[35mCREATE INDEX "index_users_on_workspace_id" ON "users" ("workspace_id")[0m
+  [1m[35m (0.4ms)[0m  [1m[35mDROP TABLE IF EXISTS "workspaces" CASCADE[0m
+  [1m[35m (11.5ms)[0m  [1m[35mCREATE TABLE "workspaces" ("id" bigserial primary key, "name" character varying NOT NULL, "business_type" character varying, "plan" character varying DEFAULT 'Growth' NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (6.0ms)[0m  [1m[35mALTER TABLE "activity_logs" ADD CONSTRAINT "fk_rails_0906a71c07"
+FOREIGN KEY ("lead_id")
+  REFERENCES "leads" ("id")
+[0m
+  [1m[35m (3.9ms)[0m  [1m[35mALTER TABLE "activity_logs" ADD CONSTRAINT "fk_rails_c9badf82db"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (4.1ms)[0m  [1m[35mALTER TABLE "activity_logs" ADD CONSTRAINT "fk_rails_5d31817ab8"
+FOREIGN KEY ("workspace_id")
+  REFERENCES "workspaces" ("id")
+[0m
+  [1m[35m (3.2ms)[0m  [1m[35mALTER TABLE "leads" ADD CONSTRAINT "fk_rails_e68b669097"
+FOREIGN KEY ("assigned_to_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (3.7ms)[0m  [1m[35mALTER TABLE "leads" ADD CONSTRAINT "fk_rails_08a9cd0b0b"
+FOREIGN KEY ("workspace_id")
+  REFERENCES "workspaces" ("id")
+[0m
+  [1m[35m (4.4ms)[0m  [1m[35mALTER TABLE "notes" ADD CONSTRAINT "fk_rails_c82accd29c"
+FOREIGN KEY ("lead_id")
+  REFERENCES "leads" ("id")
+[0m
+  [1m[35m (3.2ms)[0m  [1m[35mALTER TABLE "notes" ADD CONSTRAINT "fk_rails_7f2323ad43"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (3.1ms)[0m  [1m[35mALTER TABLE "users" ADD CONSTRAINT "fk_rails_73214f707d"
+FOREIGN KEY ("workspace_id")
+  REFERENCES "workspaces" ("id")
+[0m
+  [1m[35m (10.1ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (1.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[35m (2.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES (20260502121504)[0m
+  [1m[35m (1.7ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES
+(20260502121503),
+(20260502121502),
+(20260502121454),
+(20260502121453);[0m
+  [1m[35m (10.2ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.7ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (2.1ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'test', '2026-05-02 12:30:19.552966', '2026-05-02 12:30:19.552984') RETURNING "key"[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.6ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Load (0.5ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::InternalMetadata Create (1.7ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('schema_sha1', '8ecef0b92adebacbe8cb9dbb41890df4cc3f988f', '2026-05-02 12:30:19.560393', '2026-05-02 12:30:19.560405') RETURNING "key"[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (1.1ms)[0m  [1m[35mALTER TABLE "users" DISABLE TRIGGER ALL;ALTER TABLE "workspaces" DISABLE TRIGGER ALL;ALTER TABLE "notes" DISABLE TRIGGER ALL;ALTER TABLE "leads" DISABLE TRIGGER ALL;ALTER TABLE "activity_logs" DISABLE TRIGGER ALL;ALTER TABLE "schema_migrations" DISABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" DISABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (2.7ms)[0m  [1m[31mDELETE FROM "leads";
+DELETE FROM "notes";
+DELETE FROM "users";
+DELETE FROM "workspaces";
+INSERT INTO "leads" ("id", "workspace_id", "assigned_to_id", "name", "email", "phone", "company_name", "source", "status", "estimated_value", "priority", "next_follow_up_at", "notes_summary", "created_at", "updated_at") VALUES (980190962, 980190962, 980190962, 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 9.99, 'MyString', '2026-05-02 17:15:02', 'MyText', '2026-05-02 12:30:19.732668', '2026-05-02 12:30:19.732668'), (298486374, 298486374, 298486374, 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 9.99, 'MyString', '2026-05-02 17:15:02', 'MyText', '2026-05-02 12:30:19.732668', '2026-05-02 12:30:19.732668');
+INSERT INTO "notes" ("id", "lead_id", "user_id", "body", "created_at", "updated_at") VALUES (980190962, 980190962, 980190962, 'MyText', '2026-05-02 12:30:19.756804', '2026-05-02 12:30:19.756804'), (298486374, 298486374, 298486374, 'MyText', '2026-05-02 12:30:19.756804', '2026-05-02 12:30:19.756804');
+INSERT INTO "users" ("id", "workspace_id", "name", "email", "password_digest", "role", "created_at", "updated_at") VALUES (980190962, 980190962, 'MyString', 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.761087', '2026-05-02 12:30:19.761087'), (298486374, 298486374, 'MyString', 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.761087', '2026-05-02 12:30:19.761087');
+INSERT INTO "workspaces" ("id", "name", "business_type", "plan", "created_at", "updated_at") VALUES (980190962, 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.763891', '2026-05-02 12:30:19.763891'), (298486374, 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.763891', '2026-05-02 12:30:19.763891')[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "users" DISABLE TRIGGER ALL;ALTER TABLE "workspaces" DISABLE TRIGGER ALL;ALTER TABLE "notes" DISABLE TRIGGER ALL;ALTER TABLE "leads" DISABLE TRIGGER ALL;ALTER TABLE "activity_logs" DISABLE TRIGGER ALL;ALTER TABLE "schema_migrations" DISABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" DISABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (2.1ms)[0m  [1m[31mDELETE FROM "leads";
+DELETE FROM "notes";
+DELETE FROM "users";
+DELETE FROM "workspaces";
+INSERT INTO "leads" ("id", "workspace_id", "assigned_to_id", "name", "email", "phone", "company_name", "source", "status", "estimated_value", "priority", "next_follow_up_at", "notes_summary", "created_at", "updated_at") VALUES (980190962, 980190962, 980190962, 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 9.99, 'MyString', '2026-05-02 17:15:02', 'MyText', '2026-05-02 12:30:19.828907', '2026-05-02 12:30:19.828907'), (298486374, 298486374, 298486374, 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 9.99, 'MyString', '2026-05-02 17:15:02', 'MyText', '2026-05-02 12:30:19.828907', '2026-05-02 12:30:19.828907');
+INSERT INTO "notes" ("id", "lead_id", "user_id", "body", "created_at", "updated_at") VALUES (980190962, 980190962, 980190962, 'MyText', '2026-05-02 12:30:19.829100', '2026-05-02 12:30:19.829100'), (298486374, 298486374, 298486374, 'MyText', '2026-05-02 12:30:19.829100', '2026-05-02 12:30:19.829100');
+INSERT INTO "users" ("id", "workspace_id", "name", "email", "password_digest", "role", "created_at", "updated_at") VALUES (980190962, 980190962, 'MyString', 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.829205', '2026-05-02 12:30:19.829205'), (298486374, 298486374, 'MyString', 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.829205', '2026-05-02 12:30:19.829205');
+INSERT INTO "workspaces" ("id", "name", "business_type", "plan", "created_at", "updated_at") VALUES (980190962, 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.829285', '2026-05-02 12:30:19.829285'), (298486374, 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.829285', '2026-05-02 12:30:19.829285')[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "users" DISABLE TRIGGER ALL;ALTER TABLE "workspaces" DISABLE TRIGGER ALL;ALTER TABLE "notes" DISABLE TRIGGER ALL;ALTER TABLE "leads" DISABLE TRIGGER ALL;ALTER TABLE "activity_logs" DISABLE TRIGGER ALL;ALTER TABLE "schema_migrations" DISABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" DISABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (1.8ms)[0m  [1m[31mDELETE FROM "leads";
+DELETE FROM "notes";
+DELETE FROM "users";
+DELETE FROM "workspaces";
+INSERT INTO "leads" ("id", "workspace_id", "assigned_to_id", "name", "email", "phone", "company_name", "source", "status", "estimated_value", "priority", "next_follow_up_at", "notes_summary", "created_at", "updated_at") VALUES (980190962, 980190962, 980190962, 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 9.99, 'MyString', '2026-05-02 17:15:02', 'MyText', '2026-05-02 12:30:19.966241', '2026-05-02 12:30:19.966241'), (298486374, 298486374, 298486374, 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 'MyString', 9.99, 'MyString', '2026-05-02 17:15:02', 'MyText', '2026-05-02 12:30:19.966241', '2026-05-02 12:30:19.966241');
+INSERT INTO "notes" ("id", "lead_id", "user_id", "body", "created_at", "updated_at") VALUES (980190962, 980190962, 980190962, 'MyText', '2026-05-02 12:30:19.966451', '2026-05-02 12:30:19.966451'), (298486374, 298486374, 298486374, 'MyText', '2026-05-02 12:30:19.966451', '2026-05-02 12:30:19.966451');
+INSERT INTO "users" ("id", "workspace_id", "name", "email", "password_digest", "role", "created_at", "updated_at") VALUES (980190962, 980190962, 'MyString', 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.966575', '2026-05-02 12:30:19.966575'), (298486374, 298486374, 'MyString', 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.966575', '2026-05-02 12:30:19.966575');
+INSERT INTO "workspaces" ("id", "name", "business_type", "plan", "created_at", "updated_at") VALUES (980190962, 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.966692', '2026-05-02 12:30:19.966692'), (298486374, 'MyString', 'MyString', 'MyString', '2026-05-02 12:30:19.966692', '2026-05-02 12:30:19.966692')[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (0.7ms)[0m  [1m[35mALTER TABLE "users" DISABLE TRIGGER ALL;ALTER TABLE "workspaces" DISABLE TRIGGER ALL;ALTER TABLE "notes" DISABLE TRIGGER ALL;ALTER TABLE "leads" DISABLE TRIGGER ALL;ALTER TABLE "activity_logs" DISABLE TRIGGER ALL;ALTER TABLE "schema_migrations" DISABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" DISABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (1.8ms)[0m  [1m[31mDELETE FROM "leads";
+DELETE FROM "notes";
+DELETE FROM "users";
+DELETE FROM "workspaces"[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (1.1ms)[0m  [1m[35mALTER TABLE "users" ENABLE TRIGGER ALL;ALTER TABLE "workspaces" ENABLE TRIGGER ALL;ALTER TABLE "notes" ENABLE TRIGGER ALL;ALTER TABLE "leads" ENABLE TRIGGER ALL;ALTER TABLE "activity_logs" ENABLE TRIGGER ALL;ALTER TABLE "schema_migrations" ENABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" ENABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (18.9ms)[0m  [1m[35mdo $$
+  declare r record;
+BEGIN
+FOR r IN (
+  SELECT FORMAT(
+    'UPDATE pg_constraint SET convalidated=false WHERE conname = ''%I'' AND connamespace::regnamespace = ''%I''::regnamespace; ALTER TABLE %I.%I VALIDATE CONSTRAINT %I;',
+    constraint_name,
+    table_schema,
+    table_schema,
+    table_name,
+    constraint_name
+  ) AS constraint_check
+  FROM information_schema.table_constraints WHERE constraint_type = 'FOREIGN KEY'
+)
+  LOOP
+    EXECUTE (r.constraint_check);
+  END LOOP;
+END;
+$$;
+[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+-------------------------------------------------------
+LeadTest: test_requires_a_supported_status_and_priority
+-------------------------------------------------------
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mWorkspace Create (1.2ms)[0m  [1m[32mINSERT INTO "workspaces" ("name", "business_type", "plan", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["name", "Test Co"], ["business_type", nil], ["plan", "Growth"], ["created_at", "2026-05-02 12:30:45.263287"], ["updated_at", "2026-05-02 12:30:45.263287"]]
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email") = LOWER($1) LIMIT $2[0m  [["email", "owner@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.7ms)[0m  [1m[32mINSERT INTO "users" ("workspace_id", "name", "email", "password_digest", "role", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"[0m  [["workspace_id", 1], ["name", "Owner"], ["email", "owner@example.com"], ["password_digest", "[FILTERED]"], ["role", "owner"], ["created_at", "2026-05-02 12:30:45.343065"], ["updated_at", "2026-05-02 12:30:45.343065"]]
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+-------------------------------------------------
+UserTest: test_normalizes_email_and_authenticates
+-------------------------------------------------
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mWorkspace Create (0.6ms)[0m  [1m[32mINSERT INTO "workspaces" ("name", "business_type", "plan", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["name", "Test Co"], ["business_type", nil], ["plan", "Growth"], ["created_at", "2026-05-02 12:30:45.382233"], ["updated_at", "2026-05-02 12:30:45.382233"]]
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email") = LOWER($1) LIMIT $2[0m  [["email", "owner@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.4ms)[0m  [1m[32mINSERT INTO "users" ("workspace_id", "name", "email", "password_digest", "role", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"[0m  [["workspace_id", 2], ["name", "Owner"], ["email", "owner@example.com"], ["password_digest", "[FILTERED]"], ["role", "owner"], ["created_at", "2026-05-02 12:30:45.387725"], ["updated_at", "2026-05-02 12:30:45.387725"]]
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+----------------------------------------------------------------
+Api::AuthControllerTest: test_signup_creates_owner_and_workspace
+----------------------------------------------------------------
+Started POST "/api/auth/signup" for 127.0.0.1 at 2026-05-02 17:30:45 +0500
+Processing by Api::AuthController#signup as HTML
+  Parameters: {"name"=>"Demo Owner", "email"=>"demo-owner@example.com", "password"=>"[FILTERED]", "workspace_name"=>"Demo Workspace"}
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.0ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email") = LOWER($1) LIMIT $2[0m  [["email", "demo-owner@example.com"], ["LIMIT", 1]]
+  [1m[36mWorkspace Create (0.4ms)[0m  [1m[32mINSERT INTO "workspaces" ("name", "business_type", "plan", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5) RETURNING "id"[0m  [["name", "Demo Workspace"], ["business_type", nil], ["plan", "Growth"], ["created_at", "2026-05-02 12:30:45.622203"], ["updated_at", "2026-05-02 12:30:45.622203"]]
+  [1m[36mUser Exists? (0.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email") = LOWER($1) LIMIT $2[0m  [["email", "demo-owner@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Create (0.8ms)[0m  [1m[32mINSERT INTO "users" ("workspace_id", "name", "email", "password_digest", "role", "created_at", "updated_at") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"[0m  [["workspace_id", 3], ["name", "Demo Owner"], ["email", "demo-owner@example.com"], ["password_digest", "[FILTERED]"], ["role", "owner"], ["created_at", "2026-05-02 12:30:45.625819"], ["updated_at", "2026-05-02 12:30:45.625819"]]
+  [1m[36mUser Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE LOWER("users"."email") = LOWER($1) AND "users"."id" != $2 LIMIT $3[0m  [["email", "demo-owner@example.com"], ["id", 3], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+Completed 201 Created in 41ms (Views: 0.6ms | ActiveRecord: 3.4ms | Allocations: 24250)
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[31mROLLBACK[0m
